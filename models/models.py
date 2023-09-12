@@ -5,6 +5,7 @@ from datetime import datetime
 
 Base = declarative_base()
 
+# Model to type of groups
 class TypeGroup(Base):
     __tablename__ = "type_group"
 
@@ -16,6 +17,7 @@ class TypeGroup(Base):
     # Relación uno a uno con Group
     group = relationship("Group", uselist=False, back_populates="type_group")
 
+# Model to groups
 class Group(Base):
     __tablename__ = "group_"
 
@@ -27,3 +29,22 @@ class Group(Base):
 
     # Relación uno a uno con TypeGroup
     type_group = relationship("TypeGroup", uselist=False, back_populates="group")
+    user = relationship("User", uselist=False, back_populates="group")
+
+# Model to users
+class User(Base):
+    __tablename__ = "user"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(255))
+    email = Column(String(255))
+    user = Column(String(25))
+    password = Column(String(255))
+    rol = Column(Integer)
+    group_id = Column(Integer, ForeignKey('group_.id'), unique=True)
+    routes = Column(Integer)
+    status = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
+    
+    # Relación uno a uno con TypeGroup
+    group = relationship("Group", uselist=False, back_populates="user")
