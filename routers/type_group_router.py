@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from config.database import get_db
-from models.type_group import TypeGroup
-from schemas.type_group import TypeGroupList, TypeGroupCreate
+from models.models import TypeGroup
+from schemas.type_group import TypeGroupList, TypeGroupCreate, TypeGroupBase
 
 router = APIRouter()
 
@@ -11,7 +11,7 @@ def get_all_type_groups(skip: int = 0, limit: int = 100, db: Session = Depends(g
     type_groups = db.query(TypeGroup).offset(skip).limit(limit).all()
     return {"type_groups": type_groups}
 
-@router.post("/type_group", response_model=TypeGroupList)
+@router.post("/type_group", response_model=TypeGroupBase)
 def create_type_group(type_group: TypeGroupCreate, db: Session = Depends(get_db)):
     new_type_group = TypeGroup(**type_group.dict())
     db.add(new_type_group)
