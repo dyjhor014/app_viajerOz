@@ -1,9 +1,8 @@
 from fastapi import FastAPI
 from config.database import engine
-from routers import groups_router, type_group_router, user_router
+from routers import groups_router, type_group_router, type_vehicle_router, user_router, vehicle_router
 from fastapi.staticfiles import StaticFiles
-#from models import type_group_model, group_model
-from models.models import TypeGroup, Group, User
+from models.models import TypeGroup, Group, User, TypeVehicle, Vehicle
 
 app = FastAPI()
 
@@ -11,6 +10,8 @@ app = FastAPI()
 app.include_router(type_group_router.router)
 app.include_router(groups_router.router)
 app.include_router(user_router.router)
+app.include_router(type_vehicle_router.router)
+app.include_router(vehicle_router.router)
 
 
 #StaticFiles
@@ -24,3 +25,5 @@ async def main():
 TypeGroup.metadata.create_all(bind=engine)
 Group.metadata.create_all(bind=engine)
 User.metadata.create_all(bind=engine)
+TypeVehicle.metadata.create_all(bind=engine)
+Vehicle.metadata.create_all(bind=engine)

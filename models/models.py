@@ -14,22 +14,23 @@ class TypeGroup(Base):
     status = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow, server_default=text('CURRENT_TIMESTAMP'))
     
-    # Relación uno a uno con Group
-    group = relationship("Group", uselist=False, back_populates="type_group")
+    # Relación uno a muchos con Group
+    groups = relationship("Group", back_populates="type_group")
 
 # Model to groups
 class Group(Base):
     __tablename__ = "group_"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    type_id = Column(Integer, ForeignKey('type_group.id'), unique=True)  # Establece unique=True para una relación uno a uno
+    type_id = Column(Integer, ForeignKey('type_group.id'))
     name = Column(String(255))
     status = Column(Boolean, default=True)
     created_at = Column(DateTime, default=func.now())
 
     # Relación uno a uno con TypeGroup
-    type_group = relationship("TypeGroup", uselist=False, back_populates="group")
-    user = relationship("User", uselist=False, back_populates="group")
+    type_group = relationship("TypeGroup", back_populates="groups")
+    # Relación uno a muchos con User
+    users = relationship("User", back_populates="group")
 
 # Model to users
 class User(Base):
@@ -41,10 +42,44 @@ class User(Base):
     user = Column(String(25))
     password = Column(String(255))
     rol = Column(Integer)
-    group_id = Column(Integer, ForeignKey('group_.id'), unique=True)
+    group_id = Column(Integer, ForeignKey('group_.id'))
     routes = Column(Integer)
     status = Column(Boolean, default=True)
     created_at = Column(DateTime, default=func.now())
     
-    # Relación uno a uno con TypeGroup
-    group = relationship("Group", uselist=False, back_populates="user")
+    # Relación uno a uno con Group
+    group = relationship("Group", back_populates="users")
+    
+    # Relación uno a muchos con Vehicle
+    vehicles = relationship("Vehicle", back_populates="user")
+
+#Model to type_vehicle
+class TypeVehicle(Base):
+    __tablename__ = "type_vehicle"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(255))
+    status = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
+    
+    # Relación uno a muchos con Vehiculos
+    vehicles = relationship("Vehicle", back_populates="type_vehicle")
+    
+class Vehicle(Base):
+    __tablename__ = "vehicle"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('user.id'))
+    type_vehicle_id = Column(Integer, ForeignKey('type_vehicle.id'))
+    brand = Column(String(255))
+    model = Column(String(255))
+    year = Column(String(4))
+    registration = Column(String(10))
+    image = Column(String(255))
+    status = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
+    
+    # Relación uno a uno con TypeVehicle
+    type_vehicle = relationship("TypeVehicle", back_populates="vehicles")
+    # Relación uno a muchos con User
+    user = relationship("User", back_populates="vehicles")
