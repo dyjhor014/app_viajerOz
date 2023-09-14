@@ -8,7 +8,6 @@ class TypeGroupBase(BaseModel):
     status: bool
     created_at: datetime  # Asegúrate de importar datetime desde datetime
 
-# Esto es opcional, pero puedes crear una clase Pydantic para representar la lista de TypeGroup
 class TypeGroupList(BaseModel):
     type_groups: List[TypeGroupBase]
 
