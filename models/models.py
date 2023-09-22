@@ -69,7 +69,7 @@ class User(Base):
     recomendation = relationship("Recomendation", back_populates="user")
     
     # Definir relacion con LikeDislikeRecomendation
-    LikeDislikeRecomendation = relationship("LikeDislikeRecomendation", back_populates="user")
+    like_dislike_recomendation = relationship("LikeDislikeRecomendation", back_populates="user")
 
 #Model to type_vehicle
 class TypeVehicle(Base):
@@ -112,19 +112,35 @@ class Category(Base):
     created_at = Column(DateTime, default=func.now())
     
     # Relación de muchos a uno con Post
-    post = relationship("Post", back_populates="category")
-    
-class City(Base):
-    __tablename__ = "city"
+    posts = relationship("Post", back_populates="category")
+
+class Department(Base):
+    __tablename__ = "department"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(255), nullable=False)
     description = Column(String(255), nullable=False)
     status = Column(Boolean, default=True)
     created_at = Column(DateTime, default=func.now())
+    
+    # Relacion de muchos a uno con City
+    cities = relationship("City", back_populates="department")
+    
+class City(Base):
+    __tablename__ = "city"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    department_id = Column(Integer, ForeignKey('department.id'), nullable=False)
+    name = Column(String(255), nullable=False)
+    description = Column(String(255), nullable=False)
+    status = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
 
+    # Definir relacion con Department
+    department = relationship("Department", back_populates="cities")
+    
     # Definir la relación para acceder a los Posts relacionados como ciudad de origen
-    origin_post = relationship("Post", foreign_keys="[Post.city_origin]", back_populates="origin_city")
+    origin_posts = relationship("Post", foreign_keys="[Post.city_origin]", back_populates="origin_city")
     
     # Definir la relación para acceder a los Posts relacionados como ciudad de destino
     destination_posts = relationship("Post", foreign_keys="[Post.city_destination]", back_populates="destination_city")
@@ -271,7 +287,7 @@ class Recomendation(Base):
     city_id = Column(Integer, ForeignKey('city.id'), nullable=False)
     name = Column(Text, nullable=False)
     detail = Column(Text, nullable=False)
-    location = Column(Text, unique=True, nullable=False)
+    location = Column(String(255), unique=True, nullable=False)
     like = Column(Integer, default=0)
     dislike = Column(Integer, default=0)
     status = Column(Boolean, default=True)

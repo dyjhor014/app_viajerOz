@@ -12,8 +12,8 @@ def get_all_type_vehicles(skip: int = 0, limit: int = 100, db: Session = Depends
     return {"type_vehicles": type_vehicles}
 
 @router.post("/type_vehicle", response_model=TypeVehicleBase)
-def create_type_vehicle(type_group: TypeVehicleCreate, db: Session = Depends(get_db)):
-    new_type_vehicle = TypeVehicle(**type_group.dict())
+def create_type_vehicle(type_vehicle: TypeVehicleCreate, db: Session = Depends(get_db)):
+    new_type_vehicle = TypeVehicle(**type_vehicle.dict())
     db.add(new_type_vehicle)
     db.commit()
     db.refresh(new_type_vehicle)
