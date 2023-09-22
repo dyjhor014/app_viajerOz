@@ -12,8 +12,8 @@ def get_all_groups(skip: int = 0, limit: int = 100, db: Session = Depends(get_db
     return {"groups": groups}
 
 @router.post("/group", response_model=GroupBase)
-def create_group(type_group: GroupCreate, db: Session = Depends(get_db)):
-    new_group = Group(**type_group.dict())
+def create_group(group: GroupCreate, db: Session = Depends(get_db)):
+    new_group = Group(**group.dict())
     db.add(new_group)
     db.commit()
     db.refresh(new_group)
