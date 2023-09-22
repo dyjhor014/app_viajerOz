@@ -22,6 +22,7 @@ def create_like_dislike_recomendation(like_dislike_recomendation: LikeDislikeRec
     # Obtener la recomendación asociada
     recomendation = db.query(Recomendation).filter_by(id=like_dislike_recomendation.recomendation_id).first()
     
+    # Verificamos que exista
     if not recomendation:
         raise HTTPException(status_code=404, detail="La recomendación asociada no existe")
     
