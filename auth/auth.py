@@ -1,9 +1,10 @@
 import jwt
 from fastapi import Depends
 from datetime import datetime, timedelta
+from decouple import config
 
 # Clave secreta para firmar el token
-SECRET_KEY = "mi clave secreta"
+SECRET_KEY = config('SECRET_KEY')
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30 #Tiempo de expiracion del token
 
