@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from config.database import get_db
 from models.models import Post, User
 from schemas.post import PostBase, PostCreate, PostList
+from auth.middleware_auth import custom_middleware
 
 router = APIRouter()
 
@@ -16,9 +17,9 @@ def create_post(post: PostCreate, db: Session = Depends(get_db)):
     new_post = Post(**post.dict())
     
     # Obtenemos el usuario referencia
-    user = db.query(User).filter_by(id = post.user_id).first()
+    user = db.query(User).filter_by(id=post.user_id).first()
     
-    # Validamos que exista el user
+    # Validamos que exista el usuario
     if not user:
         raise HTTPException(status_code=404, detail="El usuario no existe")
     

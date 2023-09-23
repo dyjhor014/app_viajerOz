@@ -25,3 +25,7 @@ class UserCreate(BaseModel):
     rol: int
     group_id: int
     routes: int
+    
+class UserResponseToken(BaseModel):
+    access_token: str
+    token_type: str
