@@ -8,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+app = FastAPI(docs_url="/docs", redoc_url="/redoc")
+
 # Agrega el middleware de manejo de tokens JWT
 app.middleware("http")(custom_middleware)
 
