@@ -10,7 +10,7 @@ async def custom_middleware(request: Request, call_next):
     path = request.url.path
 
     # Verificar si la ruta es /docs, /redoc o /openapi.json y no aplicar autenticación en esos casos
-    if path.startswith("/docs") or path.startswith("/redoc") or path.startswith("/openapi.json") or path.startswith("/login"):
+    if path.startswith("/docs") or path.startswith("/redoc") or path.startswith("/openapi.json") or path.startswith("/login") or path.startswith("/user"):
         response = await call_next(request)
         return response
 

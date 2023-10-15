@@ -4,6 +4,7 @@ from routers import category_recomendation_router, category_router, city_router,
 from fastapi.staticfiles import StaticFiles
 from models.models import TypeGroup, Group, User, TypeVehicle, Vehicle, Category, Department, City, Post, Image, LikeDislikePost, Comment, LikeDislikeComment, CategoryRecomendation, Recomendation, LikeDislikeRecomendation
 from auth.middleware_auth import custom_middleware
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
@@ -53,3 +54,16 @@ LikeDislikeComment.metadata.create_all(bind=engine)
 CategoryRecomendation.metadata.create_all(bind=engine)
 Recomendation.metadata.create_all(bind=engine)
 LikeDislikeRecomendation.metadata.create_all(bind=engine)
+
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
