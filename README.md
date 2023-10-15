@@ -5,6 +5,8 @@ y explorar nuevas aventuras.
 
 ## Características
 
+- **Login y registro**: Puedes registrar una cuenta e iniciar sesión, además solo podrás ver las rutas si estás autorizado mediante un token que tiene vida útil de 30 minutos.
+
 - **Publica tus Experiencias**: Comparte tus emocionantes viajes con la comunidad. Escribe sobre tus aventuras, comparte fotos y consejos útiles, recomendaciones sobre dónde comer, hospedarte o cargar combustible.
 
 - **Descubre Nuevos Destinos**: Explora recomendaciones de viajes de otros usuarios y descubre nuevos lugares que aún no has visitado.
@@ -37,6 +39,8 @@ y explorar nuevas aventuras.
    uvicorn main:app --reload
 
 La aplicación estará disponible en http://localhost:8000.
+
+Para revisar la documentación de swagger revisa: La aplicación estará disponible en http://localhost:8000/docs
 
 ## Contribuciones
 
