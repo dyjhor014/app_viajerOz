@@ -8,6 +8,16 @@ router = APIRouter()
 
 @router.get("/category_recomendation", response_model=CategoryRecomendationList)
 def get_all_category_recomendations(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """
+    Obtén una lista de categorías de recomendación.
+
+    Parámetros:
+    - skip: La cantidad de elementos para omitir.
+    - limit: El número máximo de elementos a devolver.
+
+    Respuesta:
+    - 200 OK: Devuelve una lista de categorías de recomendación.
+    """
     category_recomendations = db.query(CategoryRecomendation).offset(skip).limit(limit).all()
     return {"category_recomendations": category_recomendations}
 
