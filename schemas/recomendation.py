@@ -29,3 +29,10 @@ class RecomendationCreate(BaseModel):
     location: str 
     like: int
     dislike: int
+    
+class RecomendationUpdate(BaseModel):
+    name: str
+    detail: str
+    location: str 
+    like: int
+    dislike: int
