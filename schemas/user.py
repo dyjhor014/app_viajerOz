@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 class UserBase(BaseModel):
     id: int
@@ -8,8 +8,8 @@ class UserBase(BaseModel):
     email: str
     user: str
     password: str
-    rol: int
-    group_id: int
+    role: str
+    group_id: Optional[int]
     routes: int
     status: bool
     created_at: datetime
