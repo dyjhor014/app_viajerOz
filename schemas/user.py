@@ -29,3 +29,10 @@ class UserCreate(BaseModel):
 class UserResponseToken(BaseModel):
     access_token: str
     token_type: str
+    
+class UserUpdate(BaseModel):
+    name: str = None
+    email: str = None
+    user: str = None
+    password: str = None
+    group_id: int = None

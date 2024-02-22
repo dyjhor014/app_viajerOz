@@ -5,6 +5,11 @@ from jwt import PyJWTError
 from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_400_BAD_REQUEST
 from auth.auth import SECRET_KEY, ALGORITHM
 
+async def get_current_user(request: Request):
+    # Obtiene el usuario del estado de la solicitud
+    user = getattr(request.state, "user", None)
+    return user
+
 async def custom_middleware(request: Request, call_next):
     # Obtener la ruta de la solicitud
     path = request.url.path

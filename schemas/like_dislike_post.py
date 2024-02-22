@@ -17,3 +17,6 @@ class LikeDislikePostCreate(BaseModel):
     post_id: int
     user_id: int
     action: str
+    
+class LikeDislikePostUpdate(BaseModel):
+    action: str

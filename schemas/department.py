@@ -15,3 +15,7 @@ class DepartmentList(BaseModel):
 class DepartmentCreate(BaseModel):
     name: str
     description: str
+
+class DepartmentUpdate(BaseModel):
+    name: str = None
+    description: str = None

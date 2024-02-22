@@ -17,3 +17,6 @@ class LikeDislikeCommentCreate(BaseModel):
     comment_id: int
     user_id: int
     action: str
+    
+class LikeDislikeCommentUpdate(BaseModel):
+    action: str

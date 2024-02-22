@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from config.database import get_db
 from models.models import Recomendation, Post
-from schemas.recomendation import RecomendationBase, RecomendationCreate, RecomendationList
+from schemas.recomendation import RecomendationBase, RecomendationCreate, RecomendationList, RecomendationUpdate
 
 router = APIRouter()
 
@@ -32,3 +32,18 @@ def create_recomendation(recomendation: RecomendationCreate, db: Session = Depen
     db.refresh(new_recomendation)
 
     return new_recomendation
+
+@router.patch("/recomendation/update/{recomendation_id}", response_model=RecomendationUpdate)
+async def update_recomendation(recomendation_id: int, recomendation_data: RecomendationUpdate, db: Session = Depends(get_db)):
+    existing_recomendation = db.query(Recomendation).filter(Recomendation.id == recomendation_id).first()
+    
+    if not existing_recomendation:
+        raise HTTPException(status_code=404, detail="Recomendation not found")
+    
+    for field, value in recomendation_data.dict().items():
+        setattr(existing_recomendation, field, value)
+    
+    db.commit()
+    db.refresh(existing_recomendation)
+    
+    return existing_recomendation

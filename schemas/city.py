@@ -17,3 +17,8 @@ class CityCreate(BaseModel):
     name: str
     description: str
     department_id: int
+    
+class CityUpdate(BaseModel):
+    name: str = None
+    description: str = None
+    department_id: int = None

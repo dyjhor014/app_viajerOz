@@ -26,3 +26,10 @@ class VehicleCreate(BaseModel):
     registration : str
     image: str
     
+class VehicleUpdate(BaseModel):
+    brand: str = None
+    model: str = None
+    year: str = None
+    registration: str = None
+    image: str = None
+    

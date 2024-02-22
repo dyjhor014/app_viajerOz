@@ -31,3 +31,12 @@ class PostCreate(BaseModel):
     city_destination: int
     like: int
     dislike: int
+    
+class PostUpdate(BaseModel):
+    category_id: int
+    title: str
+    date: str
+    brief: str
+    content: str
+    city_origin: int
+    city_destination: int

@@ -15,3 +15,7 @@ class CategoryList(BaseModel):
 class CategoryCreate(BaseModel):
     name: str
     description: str
+    
+class CategoryUpdate(BaseModel):
+    name: str = None
+    description: str = None
