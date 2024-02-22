@@ -15,9 +15,14 @@ async def get_all_users(skip: int = 0, limit: int = 100, db: Session = Depends(g
 
 @router.post("/user/register", response_model=UserCreate)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(User.email == user.email).first()
+    # Validamos que no exista registrado el mismo email
+    existing_email = db.query(User).filter(User.email == user.email).first()
+    if existing_email:
+        raise HTTPException(status_code=400, detail=f"Email {existing_email.email} already registered")
+    # Validamos que no exista registrado el mismo usuario
+    existing_user = db.query(User).filter(User.user == user.user).first()
     if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail=f"Username {existing_user.user} already in use")
     # Obtener la contraseña sin hashear desde el objeto UserCreate
     password = user.password.encode('utf-8')  # Codifica la contraseña a bytes
     
