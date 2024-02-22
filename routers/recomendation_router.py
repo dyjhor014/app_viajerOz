@@ -33,7 +33,7 @@ def create_recomendation(recomendation: RecomendationCreate, db: Session = Depen
 
     return new_recomendation
 
-@router.patch("/recomendation/{recomendation_id}", response_model=RecomendationUpdate)
+@router.patch("/recomendation/update/{recomendation_id}", response_model=RecomendationUpdate)
 async def update_recomendation(recomendation_id: int, recomendation_data: RecomendationUpdate, db: Session = Depends(get_db)):
     existing_recomendation = db.query(Recomendation).filter(Recomendation.id == recomendation_id).first()
     

@@ -21,3 +21,8 @@ class ImageCreate(BaseModel):
     name: str
     description: str
     url: str
+
+class ImageUpdate(BaseModel):
+    name: str
+    description: str
+    url: str
