@@ -13,8 +13,11 @@ async def get_all_users(skip: int = 0, limit: int = 100, db: Session = Depends(g
     users = db.query(User).offset(skip).limit(limit).all()
     return {"users": users}
 
-@router.post("/user/register", response_model=UserBase)
+@router.post("/user/register", response_model=UserCreate)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    existing_user = db.query(User).filter(User.email == user.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
     # Obtener la contraseña sin hashear desde el objeto UserCreate
     password = user.password.encode('utf-8')  # Codifica la contraseña a bytes
     

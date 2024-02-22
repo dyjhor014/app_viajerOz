@@ -22,9 +22,6 @@ class UserCreate(BaseModel):
     email: str
     user: str
     password: str
-    rol: int
-    group_id: int
-    routes: int
     
 class UserResponseToken(BaseModel):
     access_token: str
