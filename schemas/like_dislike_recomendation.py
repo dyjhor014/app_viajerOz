@@ -17,3 +17,6 @@ class LikeDislikeRecomendationCreate(BaseModel):
     recomendation_id: int
     user_id: int
     action: str
+
+class LikeDislikeRecomendationUpdate(BaseModel):
+    action: str

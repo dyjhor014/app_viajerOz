@@ -50,15 +50,13 @@ async def update_like_dislike_post(id: int, like_dislike_post_data: LikeDislikeP
     
     if existing_like_dislike_post.action == like_dislike_post_data.action:
         if like_dislike_post_data.action == "like":
-            message = "like"
             post.like -= 1
         else:
-            message = "dislike"
             post.dislike -= 1
         db.delete(existing_like_dislike_post)
         db.commit()
         db.refresh(post)
-        return JSONResponse(content={"message": f"{message} post successfully deleted"}, status_code=200)
+        return JSONResponse(content={"message": f"{like_dislike_post_data.action} post successfully deleted"}, status_code=200)
     if existing_like_dislike_post.action != like_dislike_post_data.action:
         existing_like_dislike_post.action = like_dislike_post_data.action
         if like_dislike_post_data.action == "like":

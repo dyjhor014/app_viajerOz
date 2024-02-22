@@ -19,5 +19,6 @@ class CommentCreate(BaseModel):
     post_id: int
     user_id: int
     content: str
-    like: int
-    dislike: int
+    
+class CommentUpdate(BaseModel):
+    content: str
