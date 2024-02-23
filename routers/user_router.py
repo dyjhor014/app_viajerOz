@@ -3,13 +3,21 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from config.database import get_db
 from models.models import User
-from schemas.user import UserBase, UserCreate, UserList, UserUpdate
-from auth.middleware_auth import get_current_user
+from schemas.user import UserCreate, UserList
+from auth.auth import get_token_from_request
+from decorators.roles.role_admin import admin_required
 
 router = APIRouter()
 
+# Endpoint protegido que requiere que el usuario sea administrador / Endpoint de prueba
+@router.get("/protected_endpoint")
+@admin_required
+async def protected_endpoint(token: str = Depends(get_token_from_request), db: Session = Depends(get_db)):
+    return {"message": "Bienvenido tienes permiso por ser administrador."}
+
 @router.get("/user", response_model=UserList)
-async def get_all_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+@admin_required
+async def get_all_users(token: str = Depends(get_token_from_request), skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = db.query(User).offset(skip).limit(limit).all()
     return {"users": users}
 

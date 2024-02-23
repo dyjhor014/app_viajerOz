@@ -11,6 +11,7 @@ app = FastAPI()
 app = FastAPI(docs_url="/docs", redoc_url="/redoc")
 
 # Agrega el middleware de manejo de tokens JWT
+#app.middleware("http")(custom_middleware)
 app.middleware("http")(custom_middleware)
 
 #Routers
