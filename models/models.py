@@ -42,9 +42,9 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False)
     user = Column(String(25), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
-    rol = Column(Integer, default=1)
-    group_id = Column(Integer, ForeignKey('group_.id'), nullable=False)
-    routes = Column(Integer)
+    role = Column(Enum('user', 'admin', 'moderator', name='user_role'), default='user') # Campo para el rol del usuario, por default USER
+    group_id = Column(Integer, ForeignKey('group_.id'))
+    routes = Column(Integer, default=0)
     status = Column(Boolean, default=True)
     created_at = Column(DateTime, default=func.now())
     

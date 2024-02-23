@@ -1,14 +1,20 @@
-# auth/middleware_auth.py
 import jwt
-from fastapi import Request, HTTPException, Response
+from fastapi import Request, HTTPException, Response, Depends
 from jwt import PyJWTError
+from sqlalchemy.orm import Session
+from config.database import get_db, SessionLocal
 from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_400_BAD_REQUEST
 from auth.auth import SECRET_KEY, ALGORITHM
+from models.models import User
 
-async def get_current_user(request: Request):
+# Función para obtener el usuario actual desde el estado de la solicitud
+async def get_current_user(request: Request, db: Session = Depends(SessionLocal)) -> User:
     # Obtiene el usuario del estado de la solicitud
     user = getattr(request.state, "user", None)
-    return user
+    if user:
+        return user
+    else:
+        raise HTTPException(status_code=401, detail="No se ha proporcionado información de usuario válida.")
 
 async def custom_middleware(request: Request, call_next):
     # Obtener la ruta de la solicitud
@@ -23,7 +29,7 @@ async def custom_middleware(request: Request, call_next):
         authorization = request.headers.get('Authorization')
         if not authorization or not authorization.startswith("Bearer "):
             # Retorna una respuesta 401 en lugar de lanzar una excepción.
-            return Response(content="No se proporciono autorizacion", status_code=HTTP_401_UNAUTHORIZED)
+            return Response(content="No se proporcionó autorización", status_code=HTTP_401_UNAUTHORIZED)
         
         token = authorization.split("Bearer ")[1]
 
