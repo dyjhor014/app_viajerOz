@@ -3,12 +3,14 @@ from sqlalchemy.orm import Session
 from config.database import get_db
 from models.models import Post, User
 from schemas.post import PostBase, PostCreate, PostList, PostUpdate
-from auth.middleware_auth import custom_middleware
+from auth.auth import get_token_from_request
+from decorators.roles.role_verify import role_required
 
 router = APIRouter()
 
 @router.get("/post", response_model=PostList)
-async def get_all_posts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+@role_required(["admin", "user"])
+async def get_all_posts(token: str = Depends(get_token_from_request), skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     posts = db.query(Post).offset(skip).limit(limit).all()
     return {"posts": posts}
 
