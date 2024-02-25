@@ -1,25 +1,45 @@
 import bcrypt
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from config.database import get_db
 from models.models import User
 from schemas.user import UserCreate, UserList
 from auth.auth import get_token_from_request
-from decorators.roles.role_admin import admin_required
+from decorators.roles.role_verify import role_required
 
 router = APIRouter()
 
-# Endpoint protegido que requiere que el usuario sea administrador / Endpoint de prueba
-@router.get("/protected_endpoint")
-@admin_required
-async def protected_endpoint(token: str = Depends(get_token_from_request), db: Session = Depends(get_db)):
-    return {"message": "Bienvenido tienes permiso por ser administrador."}
-
 @router.get("/user", response_model=UserList)
-@admin_required
+@role_required(["admin", "user", "moderator"])
 async def get_all_users(token: str = Depends(get_token_from_request), skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = db.query(User).offset(skip).limit(limit).all()
     return {"users": users}
+
+@router.get("/user/most_popular")
+@role_required(["admin", "user", "moderator"])
+async def get_all_users(token: str = Depends(get_token_from_request), skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    users = db.query(User).filter(User.routes >= 1).order_by(desc(User.routes)).offset(skip).limit(limit).all()
+    if not users: 
+        raise HTTPException(status_code=404, detail="No popular users found")
+    
+    # Mapear los objetos User a diccionarios
+    users_data = []
+    for user in users:
+        user_data = {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "user": user.user,
+            "group_id": user.group_id,
+            "routes": user.routes,
+            "status": user.status,
+            "created_at": user.created_at,
+        }
+        users_data.append(user_data)
+
+    return {"users": users_data}
+
 
 @router.post("/user/register", response_model=UserCreate)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):

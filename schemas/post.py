@@ -29,8 +29,6 @@ class PostCreate(BaseModel):
     content: str
     city_origin: int
     city_destination: int
-    like: int
-    dislike: int
     
 class PostUpdate(BaseModel):
     category_id: int
