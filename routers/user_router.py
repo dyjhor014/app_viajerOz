@@ -16,6 +16,24 @@ async def get_all_users(token: str = Depends(get_token_from_request), skip: int 
     users = db.query(User).offset(skip).limit(limit).all()
     return {"users": users}
 
+@router.get("/user/find/{id}")
+@role_required(["admin", "user", "moderator"])
+async def get_user_for_id(id: int, token: str = Depends(get_token_from_request), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == id).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="No user found")
+    
+    user_data = {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "user": user.user,
+        "group_id": user.group_id,
+        "routes": user.routes,
+    }
+    return user_data
+
 @router.get("/user/most_popular")
 @role_required(["admin", "user", "moderator"])
 async def get_all_users(token: str = Depends(get_token_from_request), skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
