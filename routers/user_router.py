@@ -1,11 +1,11 @@
 import bcrypt
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from config.database import get_db
 from models.models import User
 from schemas.user import UserCreate, UserList
-from auth.auth import get_token_from_request
+from auth.auth import get_token_from_request, get_user_from_request, decode_token
 from decorators.roles.role_verify import role_required
 
 router = APIRouter()
@@ -34,13 +34,28 @@ async def get_user_for_id(id: int, token: str = Depends(get_token_from_request),
     }
     return user_data
 
+@router.get("/user/me")
+async def get_current_user_data(user: str = Depends(get_user_from_request), db: Session = Depends(get_db)):
+    # Aquí puedes usar directamente el usuario obtenido
+    print("Usuario actual:", user)
+    user = db.query(User).filter(User.user == user).first()
+    user_data = {
+        "name": user.name,
+        "email": user.email,
+        "user": user.user,
+        "group_id": user.group_id,
+        "routes": user.routes,
+    }
+    return user_data
+    
+
 @router.get("/user/most_popular")
 @role_required(["admin", "user", "moderator"])
 async def get_all_users(token: str = Depends(get_token_from_request), skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = db.query(User).filter(User.routes >= 1).order_by(desc(User.routes)).offset(skip).limit(limit).all()
     if not users: 
         raise HTTPException(status_code=404, detail="No popular users found")
-    
+    print(f"most popular token: {token}")
     # Mapear los objetos User a diccionarios
     users_data = []
     for user in users:
