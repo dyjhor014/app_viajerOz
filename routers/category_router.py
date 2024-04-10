@@ -13,7 +13,7 @@ def get_all_categories(skip: int = 0, limit: int = 100, db: Session = Depends(ge
 
 @router.post("/category", response_model=CategoryBase)
 def create_category(category: CategoryCreate, db: Session = Depends(get_db)):
-    new_category = Category(**category.dict())
+    new_category = Category(**category.model_dump())
     db.add(new_category)
     db.commit()
     db.refresh(new_category)

@@ -1,7 +1,4 @@
 import qrcode, os
-from fastapi import FastAPI
-
-app = FastAPI()
 
 def generate_qr_code(text, folder_path, file_name):
     # Crear la carpeta si no existe

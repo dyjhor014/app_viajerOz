@@ -38,7 +38,7 @@ async def get_user_for_id(id: int, token: str = Depends(get_token_from_request),
 @router.get("/user/me")
 async def get_current_user_data(user: str = Depends(get_user_from_request), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.user == user).first()
-    
+    print(f"El usuario es {user}")
     #Generamos la ruta dinamica para crear el codigo QR
     text = f"http://127.0.0.1:8000/user/find/{user.id}"
     folder_path = f"static/images/user/{user.id}/"  # Ruta a la carpeta donde deseas guardar el archivo
@@ -109,9 +109,3 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
     
     return new_user
-
-@router.get("/generate_qr_code/{text}")
-async def generate_qr_code_endpoint(text: str):
-    file_path = "static/images/user/codigo_qr.png"
-    generate_qr_code(text, file_path)
-    return {"message": f"Código QR generado con el texto '{text}'. Se ha guardado en el archivo: {file_path}"}
