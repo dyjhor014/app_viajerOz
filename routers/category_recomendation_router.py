@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from config.database import get_db
-from models.models import CategoryRecomendation
+from models.models import CategoryRecomendation, User, Group
 from schemas.category_recomendation import CategoryRecomendationBase, CategoryRecomendationCreate, CategoryRecomendationList
+from auth.auth import get_user_from_request
+from helpers.functions.delete_record import check_user_permissions, delete_record, deactivate_record, get_record_by_id
 
 router = APIRouter()
 
@@ -29,7 +31,7 @@ async def get_all_category_recomendations(skip: int = 0, limit: int = 100, db: S
              description="Crea una nueva categoría de recomendación.",
              response_description="Nueva categoría de recomendación creada")
 async def create_category_recomendations(category_recomendation: CategoryRecomendationCreate, db: Session = Depends(get_db)):
-    new_category_recomendations = CategoryRecomendation(**category_recomendation.dict())
+    new_category_recomendations = CategoryRecomendation(**category_recomendation.model_dump())
     db.add(new_category_recomendations)
     db.commit()
     db.refresh(new_category_recomendations)
@@ -51,3 +53,24 @@ async def update_category_recomendation(id: int, category_recomendation_data: Ca
     db.refresh(existing_category_recomendation)
     
     return existing_category_recomendation
+
+@router.delete("/category_recomendation/delete/{id}")
+async def delete_category_recomendation(id: int, user: str = Depends(get_user_from_request), db: Session = Depends(get_db)):
+        
+    category_recomendation = get_record_by_id(CategoryRecomendation, id, db)
+    
+    if not category_recomendation:
+        raise HTTPException(status_code=404, detail="La categoría de recomendación no existe")
+    
+    if category_recomendation.status == 0:
+        raise HTTPException(status_code=404, detail="El registro se encuentra de baja o no existe")
+    
+    # Verifica si el usuario es admin o moderator
+    role = check_user_permissions(user, db)
+    
+    if role == 'admin':
+        response = delete_record(category_recomendation, db, id)
+        return response
+    elif role == 'moderator':
+        response = deactivate_record(category_recomendation, db, id)
+        return response
