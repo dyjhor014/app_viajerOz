@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from models.models import User, Group
+from models.models import User
 
 
 def check_user_permissions(user, db):

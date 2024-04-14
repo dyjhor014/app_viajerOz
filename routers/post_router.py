@@ -2,10 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from config.database import get_db
-from models.models import Post, User
+from models.models import Post, User, City, Image, Comment, Category, Recomendation
 from schemas.post import PostBase, PostCreate, PostList, PostUpdate
-from auth.auth import get_token_from_request
+from auth.auth import get_token_from_request, get_user_from_request
 from decorators.roles.role_verify import role_required
+from sqlalchemy.orm import selectinload
 
 router = APIRouter()
 
@@ -72,3 +73,50 @@ async def update_post(post_id: int, post_data: PostUpdate, db: Session = Depends
     db.refresh(existing_post)
     
     return existing_post
+
+@router.get("/post/mostpopular/")
+async def get_mostpopular_post(skip: int = 0, limit: int = 100, user: str = Depends(get_user_from_request), db: Session = Depends(get_db)):
+    # Realizamos la consulta uniendo las tablas de Post y User para obtener el nombre del usuario asociado a cada publicación
+    user = db.query(User).filter(User.user == user).first()
+    posts_user = db.query(Post).\
+        options(selectinload(Post.user)).\
+        join(User, Post.user_id == User.id).\
+        join(Category, Post.category_id == Category.id).\
+        join(City, Post.city_origin == City.id).\
+        filter(Post.like >= 1, User.id != user.id).\
+        order_by(desc(Post.like)).offset(skip).limit(limit).all()
+
+    posts = []
+
+    for post in posts_user:
+        # Consulta separada para cargar las imágenes asociadas a cada post
+        images = db.query(Image).filter(Image.post_id == post.id).all()
+        images_urls = [image.url for image in images]
+        comments = db.query(Comment).join(User, Comment.user_id == User.id).filter(Comment.post_id == post.id).all()
+        comments_list = [{"user_id": comment.user.id, "user_name": comment.user.name, "content": comment.content, "like": comment.like, "dislike": comment.dislike} for comment in comments]
+        vehicle = f"{post.vehicle.brand} {post.vehicle.model}" if post.vehicle else None
+        
+        recomendations = db.query(Recomendation).join(User, Recomendation.user_id == User.id).filter(Recomendation.post_id == post.id).all()
+        recomendation_list = [{"id_recomendation": recomendation.id,"category": recomendation.category_recomendation.name, "user": recomendation.user.name, "city": recomendation.city.name, "name": recomendation.name, "detail": recomendation.detail, "location": recomendation.location, "like": recomendation.like, "dislike": recomendation.dislike, "created_at": recomendation.created_at} for recomendation in recomendations]
+        
+        post_dict = {
+            "post_id": post.id,
+            "post_category": post.category.name,
+            "user_name": post.user.name,
+            "created_at": post.created_at,
+            "city_origin": post.origin_city.name,
+            "city_destination": post.destination_city.name,
+            "title": post.title,
+            "brief": post.brief,
+            "content": post.content,
+            "likes": post.like,
+            "total_comments": post.comments,
+            "vehicle": vehicle,
+            "images": images_urls,
+            "comments": comments_list,
+            "recomendations": recomendation_list
+        }
+
+        posts.append(post_dict)
+
+    return {"posts": posts}

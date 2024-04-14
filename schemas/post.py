@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 class PostBase(BaseModel):
     id: int
@@ -23,6 +23,7 @@ class PostList(BaseModel):
 class PostCreate(BaseModel):
     user_id: int
     category_id: int
+    vehicle: Optional[int] = None
     title: str
     date: str
     brief: str

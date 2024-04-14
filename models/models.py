@@ -75,6 +75,9 @@ class User(Base):
     
     # Definir relacion con LikeDislikeRecomendation
     like_dislike_recomendation = relationship("LikeDislikeRecomendation", back_populates="user")
+    
+    # Relación uno a muchos con Post
+    posts = relationship("Post", back_populates="user")
 
 #Model to type_vehicle
 class TypeVehicle(Base):
@@ -104,8 +107,12 @@ class Vehicle(Base):
     
     # Relación uno a uno con TypeVehicle
     type_vehicle = relationship("TypeVehicle", back_populates="vehicles")
+    
     # Relación uno a muchos con User
     user = relationship("User", back_populates="vehicles")
+    
+    # Relación uno a uno con Post
+    posts = relationship("Post", uselist=False, back_populates="vehicle")
     
 class Category(Base):
     __tablename__ = "category"
@@ -158,6 +165,7 @@ class Post(Base):
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    vehicle_id = Column(Integer, ForeignKey('vehicle.id'), nullable=True)
     category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
     title = Column(String(255), nullable=False)
     date = Column(String(16), nullable=False)
@@ -165,8 +173,9 @@ class Post(Base):
     content = Column(Text, nullable=False) 
     city_origin = Column(Integer, ForeignKey('city.id'), nullable=False)
     city_destination = Column(Integer, ForeignKey('city.id'), nullable=False)
-    like = Column(Integer, default=0)
-    dislike = Column(Integer, default=0)
+    like = Column(Integer, default=0) # Contador de likes
+    dislike = Column(Integer, default=0) # Contador de dislikes
+    comments = Column(Integer, default=0) # Contador de comentarios
     status = Column(Boolean, default=True)
     created_at = Column(DateTime, default=func.now())
     
@@ -190,6 +199,12 @@ class Post(Base):
     
     # Definir relacion con Recomendation
     recomendation = relationship("Recomendation", back_populates="post", lazy="dynamic")
+    
+    # Relación muchos a uno con User
+    user = relationship("User", back_populates="posts")
+    
+    # Relación muchos a uno con Vehicle
+    vehicle = relationship("Vehicle", back_populates="posts")
     
 class Image(Base):
     __tablename__ = "image"
