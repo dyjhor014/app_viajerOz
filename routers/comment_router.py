@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from config.database import get_db
-from models.models import Comment
-from schemas.comment import CommentBase, CommentCreate, CommentList, CommentUpdate
+from models.models import Comment, Post, User
+from schemas.comment import CommentBase, CommentCreate, CommentList, CommentUpdate, CommentResponse
+from auth.auth import get_user_from_request
 
 router = APIRouter()
 
@@ -11,9 +12,23 @@ async def get_all_comments(skip: int = 0, limit: int = 100, db: Session = Depend
     comments = db.query(Comment).offset(skip).limit(limit).all()
     return {"comments": comments}
 
-@router.post("/comment", response_model=CommentBase)
-async def create_comment(comment: CommentCreate, db: Session = Depends(get_db)):
+@router.post("/comment/{post_id}", response_model=CommentResponse)
+async def create_comment(post_id: int, comment: CommentCreate, user: str = Depends(get_user_from_request), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.user == user).first()
+    
+    comment.user_id = user.id
+    comment.post_id = post_id
+    
     new_comment = Comment(**comment.model_dump())
+    
+    #Obtenemos el post de referencia
+    post = db.query(Post).filter(Post.id == post_id).first()
+    
+    if not post:
+        raise HTTPException(status_code=404, detail="Not found post")
+    
+    post.comments += 1
+    
     db.add(new_comment)
     db.commit()
     db.refresh(new_comment)
