@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 class RecomendationBase(BaseModel):
     id: int
@@ -22,13 +22,11 @@ class RecomendationList(BaseModel):
 class RecomendationCreate(BaseModel):
     category_recomendation_id: int
     post_id: int
-    user_id: int 
+    user_id: Optional[int] = None 
     city_id: int 
     name: str
     detail: str
-    location: str 
-    like: int
-    dislike: int
+    location: str
     
 class RecomendationUpdate(BaseModel):
     name: str

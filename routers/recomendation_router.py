@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from config.database import get_db
-from models.models import Recomendation, Post
+from models.models import Recomendation, Post, User
 from schemas.recomendation import RecomendationBase, RecomendationCreate, RecomendationList, RecomendationUpdate
+from auth.auth import get_user_from_request
 
 router = APIRouter()
 
@@ -12,11 +13,16 @@ def get_all_recomendations(skip: int = 0, limit: int = 100, db: Session = Depend
     return {"recomendations": recomendations}
 
 @router.post("/recomendation", response_model=RecomendationBase)
-def create_recomendation(recomendation: RecomendationCreate, db: Session = Depends(get_db)):
+def create_recomendation(recomendation: RecomendationCreate, user: str = Depends(get_user_from_request), db: Session = Depends(get_db)):
     # Obtener el post asociado a la recomendación
     post = db.query(Post).filter_by(id=recomendation.post_id).first()
     if not post:
         raise HTTPException(status_code=404, detail="El post asociado no existe")
+    # Validamos si el usuario que hace la peticion es el propietario del post
+    user = db.query(User).filter(User.user == user).first()
+    recomendation.user_id = user.id
+    if user.id != post.user_id:
+        raise HTTPException(status_code=400, detail="El usuario no puede crear recomendaciones porque no es propietario del post")
     # Obtener las ciudades de origen y destino del post
     origin_city_id = post.city_origin
     destination_city_id = post.city_destination
@@ -26,7 +32,7 @@ def create_recomendation(recomendation: RecomendationCreate, db: Session = Depen
         raise HTTPException(status_code=400, detail="El city_id proporcionado no esta en ciudad origen o ciudad destino")
 
     # Crear la recomendación
-    new_recomendation = Recomendation(**recomendation.dict())
+    new_recomendation = Recomendation(**recomendation.model_dump())
     db.add(new_recomendation)
     db.commit()
     db.refresh(new_recomendation)
@@ -40,7 +46,7 @@ async def update_recomendation(recomendation_id: int, recomendation_data: Recome
     if not existing_recomendation:
         raise HTTPException(status_code=404, detail="Recomendation not found")
     
-    for field, value in recomendation_data.dict().items():
+    for field, value in recomendation_data.model_dump().items():
         setattr(existing_recomendation, field, value)
     
     db.commit()
