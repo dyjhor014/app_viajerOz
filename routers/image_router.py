@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from config.database import get_db
-from models.models import Image
+from models.models import Image, User, Post
 from schemas.image import ImageBase, ImageCreate, ImageList, ImageUpdate
+from auth.auth import get_user_from_request
 
 router = APIRouter()
 
@@ -12,7 +13,18 @@ async def get_all_images(skip: int = 0, limit: int = 100, db: Session = Depends(
     return {"images": images}
 
 @router.post("/image", response_model=ImageBase)
-async def create_image(image: ImageCreate, db: Session = Depends(get_db)):
+async def create_image(image: ImageCreate, user: str = Depends(get_user_from_request), db: Session = Depends(get_db)):
+    # Obtener el post asociado a la recomendación
+    post = db.query(Post).filter_by(id=image.post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="El post asociado no existe")
+    
+    # Validamos si el usuario que hace la peticion es el propietario del post
+    user = db.query(User).filter(User.user == user).first()
+    image.user_id = user.id
+    if image.user_id != post.user_id:
+        raise HTTPException(status_code=403, detail="El usuario no puede agregar imagenes porque no es propietario del post")
+    
     new_image = Image(**image.model_dump())
     db.add(new_image)
     db.commit()

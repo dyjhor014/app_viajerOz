@@ -22,7 +22,7 @@ def create_recomendation(recomendation: RecomendationCreate, user: str = Depends
     user = db.query(User).filter(User.user == user).first()
     recomendation.user_id = user.id
     if user.id != post.user_id:
-        raise HTTPException(status_code=400, detail="El usuario no puede crear recomendaciones porque no es propietario del post")
+        raise HTTPException(status_code=403, detail="El usuario no puede crear recomendaciones porque no es propietario del post")
     # Obtener las ciudades de origen y destino del post
     origin_city_id = post.city_origin
     destination_city_id = post.city_destination

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 class ImageBase(BaseModel):
     id: int
@@ -17,7 +17,7 @@ class ImageList(BaseModel):
 
 class ImageCreate(BaseModel):
     post_id: int
-    user_id: int
+    user_id: Optional[int] = None
     name: str
     description: str
     url: str
