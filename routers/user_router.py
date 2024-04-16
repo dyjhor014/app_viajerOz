@@ -3,11 +3,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from config.database import get_db
-from models.models import User
+from models.models import User, Post, Group
 from schemas.user import UserCreate, UserList
 from auth.auth import get_token_from_request, get_user_from_request
 from decorators.roles.role_verify import role_required
 from helpers.qr.qr_generate import generate_qr_code
+from schemas.post import PostBase
 
 router = APIRouter()
 
@@ -57,24 +58,47 @@ async def get_current_user_data(user: str = Depends(get_user_from_request), db: 
     
 
 @router.get("/user/most_popular")
-@role_required(["admin", "user", "moderator"])
-async def get_all_users(token: str = Depends(get_token_from_request), skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+async def get_all_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = db.query(User).filter(User.routes >= 1).order_by(desc(User.routes)).offset(skip).limit(limit).all()
     if not users: 
         raise HTTPException(status_code=404, detail="No popular users found")
-    print(f"most popular token: {token}")
-    # Mapear los objetos User a diccionarios
+    
     users_data = []
     for user in users:
+        # Consulta para obtener las publicaciones asociadas a este usuario
+        user_posts = db.query(Post).filter(Post.user_id == user.id).all()
+        
+        # Obtener el nombre del grupo del usuario si tiene grupo asignado
+        group_name = user.group.name if user.group else None
+
+        posts_base = [PostBase(
+            id=post.id,
+            title=post.title,
+            date=post.date,
+            brief=post.brief,
+            content=post.content,
+            city_origin=post.city_origin,
+            city_destination=post.city_destination,
+            like=post.like,
+            dislike=post.dislike,
+            comments=post.comments,
+            status=post.status,
+            created_at=post.created_at,
+            user_id=post.user_id,
+            category_id=post.category_id
+        ).model_dump() for post in user_posts]
+
         user_data = {
             "id": user.id,
             "name": user.name,
             "email": user.email,
             "user": user.user,
             "group_id": user.group_id,
+            "group": group_name,
             "routes": user.routes,
             "status": user.status,
             "created_at": user.created_at,
+            "posts": posts_base
         }
         users_data.append(user_data)
 
