@@ -15,6 +15,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 @router.post("/login", response_model=UserResponseToken)
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter_by(user=form_data.username).first()
+    if user.is_active == 0:
+        raise HTTPException(status_code=400, detail="Su cuenta no está activada, debe activarla desde su correo electrónico")
     if not user or not user.verify_password(form_data.password):
         raise HTTPException(status_code=400, detail="Usuario o contraseña incorrectos")
     

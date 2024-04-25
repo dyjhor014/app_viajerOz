@@ -1,14 +1,18 @@
-import bcrypt
+import bcrypt, os, requests
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from config.database import get_db
-from models.models import User, Post, Group
+from models.models import User, Post
 from schemas.user import UserCreate, UserList
 from auth.auth import get_token_from_request, get_user_from_request
 from decorators.roles.role_verify import role_required
 from helpers.qr.qr_generate import generate_qr_code
 from schemas.post import PostBase
+from helpers.functions.dni_validator import validar_dni
+from auth.auth import create_activation_token
+from helpers.functions.sending_email import get_smtp_config, send_email_with_template
+from helpers.functions.validate_token import is_token_valid
 
 router = APIRouter()
 
@@ -105,31 +109,92 @@ async def get_all_users(skip: int = 0, limit: int = 100, db: Session = Depends(g
     return {"users": users_data}
 
 
-@router.post("/user/register", response_model=UserCreate)
-async def create_user(user: UserCreate, db: Session = Depends(get_db)):
+@router.post("/user/register")
+async def create_user(user: UserCreate, smtp_config: dict = Depends(get_smtp_config), db: Session = Depends(get_db)):
     # Validamos que no exista registrado el mismo email
     existing_email = db.query(User).filter(User.email == user.email).first()
     if existing_email:
-        raise HTTPException(status_code=400, detail=f"Email {existing_email.email} already registered")
+        raise HTTPException(status_code=400, detail=f"Email {existing_email.email} ya se encuentra registrado, por favor ingrese otro email")
     # Validamos que no exista registrado el mismo usuario
     existing_user = db.query(User).filter(User.user == user.user).first()
     if existing_user:
-        raise HTTPException(status_code=400, detail=f"Username {existing_user.user} already in use")
+        raise HTTPException(status_code=400, detail=f"Username {existing_user.user} ya se encuentra en uso, por favor ingrese otro nombre de usuario")
+    # Validamos la longitud del dni y que sean numeros:
+    if validar_dni(user.dni):
+        pass
+    else:
+        raise HTTPException(status_code=400, detail="DNI ingresado no es correcto, debe ser numero de 8 cifras")
+    # Validamos que el dni no exista y sea unico
+    existing_dni = db.query(User).filter(User.dni == user.dni).first()
+    if existing_dni:
+        raise HTTPException(status_code=400, detail=f"DNI {existing_dni.dni} ya se encuentra registrado, por favor ingrese otro email")
     # Obtener la contraseña sin hashear desde el objeto UserCreate
     password = user.password.encode('utf-8')  # Codifica la contraseña a bytes
     
     # Hashea la contraseña
     hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
     
+    # Generar el token de activación
+    activate_token = create_activation_token(user.email)
+    
     # Crea un nuevo objeto User con la contraseña hasheada
-    new_user = User(**user.model_dump())
+    #new_user = User(**user.model_dump())
+    new_user = User(**user.model_dump(), activation_token=activate_token)
     
     # Asigna la contraseña hasheada al campo password
     new_user.password = hashed_password.decode('utf-8')
     
-    # Agrega el nuevo usuario a la base de datos
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    # Enviamos el correo electrónico con el token
+    email_user_name = user.user
+    email_recipient_email = user.email
+    email_subject = f"Hola {email_user_name}, necesitas activar tu cuenta en Viajer0z para poder usar la app"
+
+    # Obtener la ruta de la carpeta de plantillas desde la variable de entorno
+    template_folder = os.getenv("EMAIL_TEMPLATE_FOLDER")
+
+    # Nombre del archivo de la plantilla
+    template_filename = "plantilla_register.html"
+
+    # Construir la ruta completa de la plantilla
+    template_path = os.path.join(template_folder, template_filename)
     
-    return new_user
+    # Ruta para activar la cuenta
+    domain = os.getenv("DOMAIN")
+    endpoint = "/user/activation/"
+    token = activate_token
+    activate_path = domain+endpoint+token
+    print(activate_path)
+
+    # Enviar el correo electrónico utilizando la función reutilizable
+    if send_email_with_template(smtp_config, smtp_config["sender_email"], smtp_config["sender_password"], email_recipient_email, email_subject, email_user_name, template_path, activate_path):
+        # Agrega el nuevo usuario a la base de datos
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        return {"message": "Correo electrónico enviado exitosamente"}
+    else:
+        raise HTTPException(status_code=500, detail="Error al enviar el correo electrónico")
+
+@router.get("/user/activation/{token}")
+async def create_user(token: str, db: Session = Depends(get_db)):
+    validate = is_token_valid(token, db)
+    if validate:
+        return {"message": "Tu correo fue confirmado y tu cuenta ha sido activada y ya puedes iniciar sesion en la aplicacion Viajer0z"}
+
+@router.get("/user/dni/{dni}")
+async def dni_api(dni: str, db: Session = Depends(get_db)):
+    url = f"https://api.perudevs.com/api/v1/dni/complete?document={dni}&key=cGVydWRldnMucHJvZHVjdGlvbi5maXRjb2RlcnMuNjYyNWRlMTFkNDFiOTQxMTE0OGI1Nzhm"
+    
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        data = response.json()
+        print(data["resultado"])
+        data_response = {
+            "nombres": data["resultado"]["nombre_completo"],
+            "genero": data["resultado"]["genero"],
+            "fecha_nacimiento": data["resultado"]["fecha_nacimiento"]
+        }
+        return data_response
+    else:
+        print("Error al consultar la API:", response.status_code)

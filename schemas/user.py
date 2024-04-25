@@ -5,6 +5,7 @@ from typing import List, Optional
 class UserBase(BaseModel):
     id: int
     name: str
+    dni: str
     email: str
     user: str
     password: str
@@ -19,6 +20,7 @@ class UserList(BaseModel):
 
 class UserCreate(BaseModel):
     name: str
+    dni: Optional[str]
     email: str
     user: str
     password: str
